@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="">
+  <form @submit.prevent="signup">
     <div class="form-control">
       <base-input
         id="employee-name"
@@ -43,7 +43,7 @@
           label="Password Confirmation:"
           name="employee-password-confirm"
           id="employee-password-confirm"
-          v-model="user.passwordConfirm"
+          v-model="user.password_confirmation"
         ></base-input>
       </div>
     </div>
@@ -60,6 +60,11 @@
         </option>
       </select>
     </div>
+    <error-area
+      v-if="errMsg"
+      :error-details="errorDetails"
+      :error="errMsg"
+    ></error-area>
     <div>
       <button>Register</button>
     </div>
@@ -69,23 +74,46 @@
 <script>
 import BaseInput from "@/components/BaseInput";
 import { ref } from "vue";
+import { useAPI } from "@/composables/api";
+import router from "@/router";
+import { storage } from "@/composables/storage";
+import ErrorArea from "@/components/ErrorArea";
 
 export default {
   name: "Register",
   components: {
     BaseInput,
+    ErrorArea,
   },
   setup() {
     const user = ref({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-      passwordConfirm: "",
-      role: "",
+      name: undefined,
+      email: undefined,
+      phone: undefined,
+      password: undefined,
+      password_confirmation: undefined,
+      role: undefined,
     });
 
-    return { user };
+    const { post, data, errorDetails } = useAPI("/register");
+    const { saveTokens } = storage();
+
+    const errMsg = ref();
+
+    const signup = () => {
+      if (user.value.password !== user.value.password_confirmation) {
+        errMsg.value = "password and confirmed password mismatched";
+      } else {
+        post(user.value)
+          .then(() => {
+            saveTokens(data.value);
+            router.push({ name: "Home" });
+          })
+          .catch(() => (errMsg.value = "Unable to Signup"));
+      }
+    };
+
+    return { user, signup, errorDetails, errMsg };
   },
 };
 </script>
@@ -97,7 +125,8 @@ export default {
 
 .password-input-control {
   display: flex;
-  align-content: space-between;
+  justify-content: space-between;
+  align-content: center;
 }
 select {
   display: block;
