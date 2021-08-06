@@ -11,14 +11,9 @@ export default {
 </script>
 
 <style>
-label {
-  display: block;
-  margin-left: 0.2rem;
-  text-align: start;
-  font-weight: bold;
-}
-
 .base-card {
+  width: 50%;
+  height: 50%;
   margin: 2rem;
   background-color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
