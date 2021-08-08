@@ -65,19 +65,19 @@
       :error-details="errorDetails"
       :error="errMsg"
     ></error-area>
-    <div>
+    <div class="register-btn">
       <button>Register</button>
     </div>
   </form>
 </template>
 
 <script>
-import BaseInput from "@/components/BaseInput";
+import BaseInput from "@/components/base/BaseInput";
 import { ref } from "vue";
 import { useAPI } from "@/composables/api";
-import router from "@/router";
-import { storage } from "@/composables/storage";
 import ErrorArea from "@/components/ErrorArea";
+import { handleState } from "@/composables/store";
+import router from "@/router";
 
 export default {
   name: "Register",
@@ -96,7 +96,7 @@ export default {
     });
 
     const { post, data, errorDetails } = useAPI("/register");
-    const { saveTokens } = storage();
+    const { setState } = handleState();
 
     const errMsg = ref();
 
@@ -106,8 +106,9 @@ export default {
       } else {
         post(user.value)
           .then(() => {
-            saveTokens(data.value);
-            router.push({ name: "Home" });
+            console.log(errorDetails);
+            setState(data.value, true);
+            router.replace({ name: "Home" });
           })
           .catch(() => (errMsg.value = "Unable to Signup"));
       }
@@ -119,10 +120,6 @@ export default {
 </script>
 
 <style scoped>
-.form-control {
-  margin: 0.5rem auto;
-}
-
 .password-input-control {
   display: flex;
   justify-content: space-between;
@@ -141,5 +138,10 @@ label {
   margin-left: 0.2rem;
   text-align: start;
   font-weight: bold;
+}
+
+.register-btn {
+  display: flex;
+  justify-content: center;
 }
 </style>
