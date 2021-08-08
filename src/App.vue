@@ -8,8 +8,8 @@
   font-family: "Roboto", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+  /*text-align: center;*/
+  /*color: #2c3e50;*/
 }
 
 * {
@@ -40,5 +40,16 @@ form {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
   padding: 2rem;
   background-color: white;
+}
+
+label {
+  display: block;
+  margin-left: 0.2rem;
+  text-align: start;
+  font-weight: bold;
+}
+
+.form-control {
+  margin: 0.5rem auto;
 }
 </style>
