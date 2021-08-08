@@ -2,13 +2,18 @@ import { computed, ref } from "vue";
 import axios from "axios";
 import axiosRetry from "axios-retry";
 import { storage } from "@/composables/storage";
+import { handleState } from "@/composables/store";
+import createAuthRefreshInterceptor from "axios-auth-refresh";
 
 const BASE_URL = "http://localhost:8000/api/v1";
 
-export const useAuthenticatedAPI = (endpoint) => {
-  const { getAccessToken } = storage();
+const { getAccessToken, getRefreshToken, saveTokens } = storage();
+const { logout } = handleState();
 
-  return useAPI(endpoint, getAccessToken ? getAccessToken : undefined);
+export const useAuthenticatedAPI = (endpoint) => {
+  const token = getAccessToken();
+
+  return useAPI(endpoint, token ? token : undefined);
 };
 
 export const useAPI = (endpoint, access_token) => {
@@ -19,7 +24,24 @@ export const useAPI = (endpoint, access_token) => {
     },
   });
 
+  const refreshToken = getRefreshToken();
+
+  const refreshLogic = (failedRequest) =>
+    instance
+      .post("/token/refresh", { refresh_token: refreshToken })
+      .then((tokenRefreshResponse) => {
+        failedRequest.response.config.headers["Authorization"] =
+          "Bearer " + tokenRefreshResponse.data.access_token;
+        saveTokens(tokenRefreshResponse.data);
+        return Promise.resolve();
+      })
+      .catch(() => {
+        logout();
+        return Promise.reject();
+      });
+
   axiosRetry(instance, { retries: 3 });
+  createAuthRefreshInterceptor(instance, refreshLogic);
 
   const loading = ref(true);
   const data = ref();
@@ -63,6 +85,10 @@ export const useAPI = (endpoint, access_token) => {
     }
   });
 
+  const errorData = computed(() => {
+    return error.value ? error.value.response.data : {};
+  });
+
   return {
     loading,
     data,
@@ -71,5 +97,6 @@ export const useAPI = (endpoint, access_token) => {
     get,
     errorMsg,
     errorDetails,
+    errorData,
   };
 };
